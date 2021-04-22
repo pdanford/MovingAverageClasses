@@ -27,12 +27,20 @@ class MA:
         self.slope = 0
         self.prev_slope = 0
         self.slope_duration = 0
+        self.MA_type = ''
 
     def GetLegend(self):
         """
         returns legend string this instance was created with
         """
         return self.legend
+
+    def GetMAType(self):
+        """
+        returns string indicating what kind of MA this instance is
+        (e.g. SMA or EMA)
+        """
+        return self.MA_type
 
     def GetPeriod(self):
         """
@@ -102,6 +110,7 @@ class SMA(MA):
 
     def __init__(self, legend, ma_period):
         super().__init__(legend, ma_period)
+        self.MA_type = 'SMA'
         self.sample_window = deque(maxlen = ma_period)
 
     def CalculateNextMA(self, new_val):
@@ -158,6 +167,7 @@ class EMA(MA):
     """
     def __init__(self, legend, ma_period):
         super().__init__(legend, ma_period)
+        self.MA_type = 'EMA'
         self.alpha = 2/(ma_period + 1)
 
     def CalculateNextMA(self, new_val):
