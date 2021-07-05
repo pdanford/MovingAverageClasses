@@ -1,4 +1,4 @@
-# version 2.0.0
+# version 2.1.0
 # requires Python 3.x
 # pdanford - April 2021
 # MIT License
@@ -13,13 +13,18 @@ class MA:
     CalculateNextMA() function
     """
 
-    def __init__(self, legend, ma_period):
+    def __init__(self, legend, ma_period, keep_history):
         """
-        legend is a string used to uniquely identify a moving average instance's
+        legend - a string used to uniquely identify a moving average instance's
         name/purpose
+
+        keep_history - if True, all calculated MA values are kept and can be
+        retrieved with GetMAHistory(). Set to False to save memory for
+        long-running use where a complete history is not needed.
         """
         self.legend = legend
         self.ma_period = ma_period
+        self.keep_history = keep_history
 
         self.init = True
         self.ma = 0
@@ -28,6 +33,8 @@ class MA:
         self.prev_slope = 0
         self.slope_duration = 0
         self.MA_type = ''
+        self.MA_history = []
+        self.MA_slope_history = []
 
     def GetLegend(self):
         """
@@ -55,11 +62,23 @@ class MA:
         """
         return self.ma
 
+    def GetMAHistory(self):
+        """
+        returns all MAs calculated since start as a list
+        """
+        return self.MA_history
+
     def GetMA_Slope(self):
         """
         return slope computed from last 2 values of calculated MA
         """
         return self.slope
+
+    def GetMA_SlopeHistory(self):
+        """
+        returns all MA slopes calculated since start as a list
+        """
+        return self.MA_slope_history
 
     def GetMA_SlopeDuration(self):
         """
@@ -91,6 +110,10 @@ class MA:
         else:
             self.slope_duration += 1
 
+        # -- update running history --
+        if self.keep_history:
+            self.MA_slope_history.append(self.slope)
+
 ## ----------------------------------------------------------------------------
 
 class SMA(MA):
@@ -108,8 +131,8 @@ class SMA(MA):
     collecting enough values to return the proper period SMA).
     """
 
-    def __init__(self, legend, ma_period):
-        super().__init__(legend, ma_period)
+    def __init__(self, legend, ma_period, keep_history = False):
+        super().__init__(legend, ma_period, keep_history)
         self.MA_type = 'SMA'
         self.sample_window = deque(maxlen = ma_period)
 
@@ -149,6 +172,10 @@ class SMA(MA):
         # -- update slope based on this MA --
         super().CalculateNextMA_Slope()
 
+        # -- update running history --
+        if self.keep_history:
+            self.MA_history.append(self.ma)
+
         return self.ma
 
 ## ----------------------------------------------------------------------------
@@ -165,8 +192,8 @@ class EMA(MA):
     converge in 4 or 5 iterations. This is to provide a reasonable MA
     approximation during initialization instead of returning 0s.
     """
-    def __init__(self, legend, ma_period):
-        super().__init__(legend, ma_period)
+    def __init__(self, legend, ma_period, keep_history = False):
+        super().__init__(legend, ma_period, keep_history)
         self.MA_type = 'EMA'
         self.alpha = 2/(ma_period + 1)
 
@@ -189,6 +216,10 @@ class EMA(MA):
 
         # -- update slope based on this MA --
         super().CalculateNextMA_Slope()
+
+        # -- update running history --
+        if self.keep_history:
+            self.MA_history.append(self.ma)
 
         return self.ma
 

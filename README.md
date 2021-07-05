@@ -47,11 +47,13 @@ for x in range(-25,25):
     print(f"{ema.GetMA_SlopeDuration():>4}")
 ```
 
-### Requirements
-- moving average classes require Python 3.x
-- f-string in the examples require Python 3.6+
+### History
+If `keep_history` is  True at instantiation, all calculated MA values and their slopes are kept and can be retrieved as a list with GetMAHistory() and GetMA_SlopeHistory(). Defaults to False to save memory for long-running use where a complete history is not needed.
 
+### Requirements
+- Python 3.6+
 
 ---
+
 :scroll: [MIT License](README.license)
 
