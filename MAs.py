@@ -1,4 +1,4 @@
-# version 2.1.1
+# version 2.1.2
 # requires Python 3.6+
 # pdanford - April 2021
 # MIT License
@@ -13,11 +13,14 @@ class MA:
     CalculateNextMA() function
     """
 
-    def __init__(self, legend, ma_period, keep_history):
+    def __init__(self, legend, ma_period, keep_history, slope_delta_x=1):
         """
         legend - a string used to uniquely identify a moving average instance's
         name/purpose (note: MA type and period is appended in GetLegend()
         for clarity)
+
+        slope_delta_x specifies the change in the x-axis between slope
+        calculations (defaults to "one unit")
 
         keep_history - if True, all calculated MA values are kept and can be
         retrieved with GetMAHistory(). Set to False to save memory for
@@ -25,17 +28,18 @@ class MA:
         """
         self.legend = legend
         self.ma_period = ma_period
+        self.slope_delta_x = slope_delta_x
         self.keep_history = keep_history
 
-        self.init = True
+        self.first_pass_init = True
         self.ma = 0
         self.prev_ma = 0
         self.slope = 0
         self.prev_slope = 0
         self.slope_duration = 0
+        self.MA_slope_history = []
         self.MA_type = ''
         self.MA_history = []
-        self.MA_slope_history = []
 
     def GetLegend(self):
         """
@@ -103,11 +107,9 @@ class MA:
         """
         self.prev_slope = self.slope
 
-        x2 = 1
-        x1 = 0
         y1 = self.prev_ma
         y2 = self.ma
-        self.slope =  (y2 - y1)/(x2 - x1)
+        self.slope =  (y2 - y1)/self.slope_delta_x
 
         if self.slope * self.prev_slope < 0:
             # sign changed
@@ -136,8 +138,8 @@ class SMA(MA):
     collecting enough values to return the proper period SMA).
     """
 
-    def __init__(self, legend, ma_period, keep_history = False):
-        super().__init__(legend, ma_period, keep_history)
+    def __init__(self, legend, ma_period, keep_history=False, slope_delta_x=1):
+        super().__init__(legend, ma_period, keep_history, slope_delta_x)
         self.MA_type = 'SMA'
         self.sample_window = deque(maxlen = ma_period)
 
@@ -161,10 +163,10 @@ class SMA(MA):
             # combine new value (while adjusting for sample size increasing)
             self.ma = self.ma + 1/len(self.sample_window) * (new_val - self.ma)
 
-            if self.init:
+            if self.first_pass_init:
                 # so slope starts at 0
                 self.prev_ma = self.ma
-                self.init = False
+                self.first_pass_init = False
         else:
             # -- update established SMA --
             # add new value to sma average
@@ -197,8 +199,8 @@ class EMA(MA):
     converge in 4 or 5 iterations. This is to provide a reasonable MA
     approximation during initialization instead of returning 0s.
     """
-    def __init__(self, legend, ma_period, keep_history = False):
-        super().__init__(legend, ma_period, keep_history)
+    def __init__(self, legend, ma_period, keep_history=False, slope_delta_x=1):
+        super().__init__(legend, ma_period, keep_history, slope_delta_x)
         self.MA_type = 'EMA'
         self.alpha = 2/(ma_period + 1)
 
@@ -209,13 +211,13 @@ class EMA(MA):
         # update for next CalculateNextMA_Slope()
         self.prev_ma = self.ma
 
-        if self.init:
+        if self.first_pass_init:
             # initialize with first value added to EMA
             # (EMA will converge in 4 or 5 iterations)
             self.ma = new_val
             # so slope starts at 0
             self.prev_ma = self.ma
-            self.init = False
+            self.first_pass_init = False
         else:
             self.ma = self.alpha * new_val + (1 - self.alpha) * self.ma
 
