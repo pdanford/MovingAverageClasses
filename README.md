@@ -15,14 +15,14 @@ collecting enough values to return the proper period SMA).
 ```
 from MAs import SMA
 
-sma = SMA("SMA(5) demo", 5)
+sma = SMA("SMA_demo", 5)
 
-print("   SMA   Slope Slope_Duration")
+print(f"{sma.GetLegend()}  Slope  Slope_Duration")
 for x in range(-25,25):
     sma.CalculateNextMA(x**2)
-    print(f"{sma.GetMA():>7.1f}", end="")
-    print(f"{sma.GetMA_Slope():>6.1f}", end="")
-    print(f"{sma.GetMA_SlopeDuration():>4}")
+    print(f"{sma.GetMA():>9.1f}", end="")
+    print(f"{sma.GetMA_Slope():>12.1f}", end="")
+    print(f"{sma.GetMA_SlopeDuration():>8}")
 ```
 
 ### Exponential Moving Average
@@ -37,14 +37,14 @@ approximation during initialization instead of returning 0s.
 ```
 from MAs import EMA
 
-ema = EMA("EMA(5) demo", 5)
+ema = EMA("EMA_demo", 5)
 
-print("   EMA   Slope Slope_Duration")
+print(f"{ema.GetLegend()}  Slope  Slope_Duration")
 for x in range(-25,25):
     ema.CalculateNextMA(x**2)
-    print(f"{ema.GetMA():>7.1f}", end="")
-    print(f"{ema.GetMA_Slope():>6.1f}", end="")
-    print(f"{ema.GetMA_SlopeDuration():>4}")
+    print(f"{ema.GetMA():>9.1f}", end="")
+    print(f"{ema.GetMA_Slope():>12.1f}", end="")
+    print(f"{ema.GetMA_SlopeDuration():>8}")
 ```
 
 ### History

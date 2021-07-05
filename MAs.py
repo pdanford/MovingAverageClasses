@@ -1,5 +1,5 @@
-# version 2.1.0
-# requires Python 3.x
+# version 2.1.1
+# requires Python 3.6+
 # pdanford - April 2021
 # MIT License
 
@@ -16,7 +16,8 @@ class MA:
     def __init__(self, legend, ma_period, keep_history):
         """
         legend - a string used to uniquely identify a moving average instance's
-        name/purpose
+        name/purpose (note: MA type and period is appended in GetLegend()
+        for clarity)
 
         keep_history - if True, all calculated MA values are kept and can be
         retrieved with GetMAHistory(). Set to False to save memory for
@@ -39,8 +40,12 @@ class MA:
     def GetLegend(self):
         """
         returns legend string this instance was created with
+
+        this is a string that is used to uniquely identify a moving average
+        instance's name/purpose (note: MA type and period is appended in
+        GetLegend() to enhance clarity)        
         """
-        return self.legend
+        return f"{self.legend}({self.MA_type}{self.ma_period})"
 
     def GetMAType(self):
         """
