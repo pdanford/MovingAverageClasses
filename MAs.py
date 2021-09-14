@@ -1,4 +1,4 @@
-# version 2.2.0
+# version 2.2.1
 # requires Python 3.6+
 # pdanford - April 2021
 # MIT License
@@ -121,7 +121,6 @@ class MA:
         """
         return self.slope_duration
 
-
 ## ----------------------------------------------------------------------------
 
 class SMA(MA):
@@ -140,6 +139,9 @@ class SMA(MA):
     """
 
     def __init__(self, legend, ma_period, keep_history=False, slope_delta_x=1):
+        """
+        also see MA.__init__()
+        """
         super().__init__(legend, ma_period, keep_history, slope_delta_x)
         self.MA_type = 'SMA'
         self.sample_window = deque(maxlen = ma_period)
@@ -148,9 +150,13 @@ class SMA(MA):
         """
         Compute Simple Moving Average iteratively
 
-        This uses a progressive formula to build up (i.e. initialize) the SMA
-        until enough new values are added to make sample window size match
-        ma_period and return the proper period SMA.
+        Initialization is a bit non-traditional:  
+        The SMA is initialized progressively using a sample window that grows
+        with each new value added until the window is the size the SMA instance
+        was created with. This is to provide a reasonable MA approximation
+        during initialization instead of returning 0s while the sample window
+        is being filled (i.e. shorter period averages are returned while the
+        SMA is collecting enough values to return the proper period SMA).
         """
         # update for next __CalculateMASlope__()
         self.prev_ma = self.ma
@@ -159,10 +165,11 @@ class SMA(MA):
             # -- progressively establish new sma --
             # (i.e. use a progressive formula until we have ma_period samples)
 
-            # add new value to sample window
-            self.sample_window.append(new_val)
             # combine new value (while adjusting for sample size increasing)
-            self.ma = self.ma + 1/len(self.sample_window) * (new_val - self.ma)
+            self.ma *= len(self.sample_window) # un-apply previous divisor
+            self.ma += new_val                 # add new value to sum
+            self.sample_window.append(new_val) # append new value to sample window
+            self.ma /= len(self.sample_window) # apply new divisor
 
             if self.first_pass_init:
                 # so slope starts at 0
@@ -174,7 +181,9 @@ class SMA(MA):
             self.ma += (new_val / self.ma_period)
             # subtract leftmost value of sample window from sma
             self.ma -= (self.sample_window[0] / self.ma_period)
-            # add new value to sample window
+            # record new value in sample window
+            # (note: leftmost pop of oldest value is handled by
+            #        deque's maxlen parameter) 
             self.sample_window.append(new_val)
 
         # -- update slope based on this MA --
@@ -201,6 +210,9 @@ class EMA(MA):
     approximation during initialization instead of returning 0s.
     """
     def __init__(self, legend, ma_period, keep_history=False, slope_delta_x=1):
+        """
+        also see MA.__init__()
+        """
         super().__init__(legend, ma_period, keep_history, slope_delta_x)
         self.MA_type = 'EMA'
         self.alpha = 2/(ma_period + 1)
