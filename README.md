@@ -21,8 +21,8 @@ print(f"{sma.GetLegend()}  Slope  Slope_Duration")
 for x in range(-25,25):
     sma.CalculateNextMA(x**2)
     print(f"{sma.GetMA():>9.1f}", end="")
-    print(f"{sma.GetMA_Slope():>12.1f}", end="")
-    print(f"{sma.GetMA_SlopeDuration():>8}")
+    print(f"{sma.GetMASlope():>12.1f}", end="")
+    print(f"{sma.GetMASlopeDuration():>8}")
 ```
 
 ### Exponential Moving Average
@@ -43,12 +43,12 @@ print(f"{ema.GetLegend()}  Slope  Slope_Duration")
 for x in range(-25,25):
     ema.CalculateNextMA(x**2)
     print(f"{ema.GetMA():>9.1f}", end="")
-    print(f"{ema.GetMA_Slope():>12.1f}", end="")
-    print(f"{ema.GetMA_SlopeDuration():>8}")
+    print(f"{ema.GetMASlope():>12.1f}", end="")
+    print(f"{ema.GetMASlopeDuration():>8}")
 ```
 
 ### History
-If `keep_history` is  True at instantiation, all calculated MA values and their slopes are kept and can be retrieved as a list with GetMAHistory() and GetMA_SlopeHistory(). Defaults to False to save memory for long-running use where a complete history is not needed.
+If `keep_history` is  True at instantiation, all calculated MA values and their slopes are kept and can be retrieved as a list with GetMAHistory() and GetMASlopeHistory(). Defaults to False to save memory for long-running use where a complete history is not needed.
 
 ### Requirements
 - Python 3.6+

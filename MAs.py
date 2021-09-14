@@ -1,4 +1,4 @@
-# version 2.1.2
+# version 2.2.0
 # requires Python 3.6+
 # pdanford - April 2021
 # MIT License
@@ -41,6 +41,31 @@ class MA:
         self.MA_type = ''
         self.MA_history = []
 
+    def __CalculateMASlope__(self):
+        """
+        internal function that calculates the current slope of the moving
+        average as of last CalculateNextMA() call
+
+        this is called by derived classes only at the end of their
+        CalculateNextMA() (note that self.prev_ma = self.ma must be done at
+        the top of the derived class's CalculateNextMA() also)
+        """
+        self.prev_slope = self.slope
+
+        y1 = self.prev_ma
+        y2 = self.ma
+        self.slope = (y2 - y1)/self.slope_delta_x
+
+        if self.slope * self.prev_slope < 0:
+            # sign changed
+            self.slope_duration = 1
+        else:
+            self.slope_duration += 1
+
+        # -- update running history --
+        if self.keep_history:
+            self.MA_slope_history.append(self.slope)
+
     def GetLegend(self):
         """
         returns legend string this instance was created with
@@ -77,49 +102,25 @@ class MA:
         """
         return self.MA_history
 
-    def GetMA_Slope(self):
+    def GetMASlope(self):
         """
         return slope computed from last 2 values of calculated MA
         """
         return self.slope
 
-    def GetMA_SlopeHistory(self):
+    def GetMASlopeHistory(self):
         """
         returns all MA slopes calculated since start as a list
         """
         return self.MA_slope_history
 
-    def GetMA_SlopeDuration(self):
+    def GetMASlopeDuration(self):
         """
         returns number of values added by CalculateNextMA() that have had
         the same sign of slope
         """
         return self.slope_duration
 
-    def CalculateNextMA_Slope(self):
-        """
-        calculates the current slope of the moving average as of last
-        CalculateNextMA() call
-
-        this is called by derived classes only at the end of their
-        CalculateNextMA() (note that self.prev_ma = self.ma must be done at
-        the top of the derived class's CalculateNextMA() also)
-        """
-        self.prev_slope = self.slope
-
-        y1 = self.prev_ma
-        y2 = self.ma
-        self.slope =  (y2 - y1)/self.slope_delta_x
-
-        if self.slope * self.prev_slope < 0:
-            # sign changed
-            self.slope_duration = 1
-        else:
-            self.slope_duration += 1
-
-        # -- update running history --
-        if self.keep_history:
-            self.MA_slope_history.append(self.slope)
 
 ## ----------------------------------------------------------------------------
 
@@ -151,7 +152,7 @@ class SMA(MA):
         until enough new values are added to make sample window size match
         ma_period and return the proper period SMA.
         """
-        # update for next CalculateNextMA_Slope()
+        # update for next __CalculateMASlope__()
         self.prev_ma = self.ma
 
         if len(self.sample_window) < self.ma_period:
@@ -177,7 +178,7 @@ class SMA(MA):
             self.sample_window.append(new_val)
 
         # -- update slope based on this MA --
-        super().CalculateNextMA_Slope()
+        super().__CalculateMASlope__()
 
         # -- update running history --
         if self.keep_history:
@@ -208,7 +209,7 @@ class EMA(MA):
         """
         Compute Exponential iteratively
         """
-        # update for next CalculateNextMA_Slope()
+        # update for next __CalculateMASlope__()
         self.prev_ma = self.ma
 
         if self.first_pass_init:
@@ -222,7 +223,7 @@ class EMA(MA):
             self.ma = self.alpha * new_val + (1 - self.alpha) * self.ma
 
         # -- update slope based on this MA --
-        super().CalculateNextMA_Slope()
+        super().__CalculateMASlope__()
 
         # -- update running history --
         if self.keep_history:
