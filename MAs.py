@@ -1,4 +1,4 @@
-# version 2.2.1
+# version 2.3.0
 # requires Python 3.6+
 # pdanford - April 2021
 # MIT License
@@ -13,14 +13,11 @@ class MA:
     CalculateNextMA() function
     """
 
-    def __init__(self, legend, ma_period, keep_history, slope_delta_x=1):
+    def __init__(self, legend, ma_period, keep_history):
         """
         legend - a string used to uniquely identify a moving average instance's
         name/purpose (note: MA type and period is appended in GetLegend()
         for clarity)
-
-        slope_delta_x specifies the change in the x-axis between slope
-        calculations (defaults to "one unit")
 
         keep_history - if True, all calculated MA values are kept and can be
         retrieved with GetMAHistory(). Set to False to save memory for
@@ -28,8 +25,14 @@ class MA:
         """
         self.legend = legend
         self.ma_period = ma_period
-        self.slope_delta_x = slope_delta_x
         self.keep_history = keep_history
+
+        # slope_delta_x specifies the change on the new_val's x-axis since the
+        # last CalculateNextMA() call. The default is "1 unit", so slope can be
+        # thought of as a "relative" slope, but can be specified exactly here
+        # or in each CalculateNextMA() call to correlate with the actual
+        # delta x so slope calculation yields the real slope.
+        self.slope_delta_x = 1 # default to "one unit"
 
         self.first_pass_init = True
         self.ma = 0
@@ -66,16 +69,8 @@ class MA:
         if self.keep_history:
             self.MA_slope_history.append(self.slope)
 
-    def GetLegend(self):
-        """
-        returns legend string this instance was created with
-
-        this is a string that is used to uniquely identify a moving average
-        instance's name/purpose (note: MA type and period is appended in
-        GetLegend() to enhance clarity)        
-        """
-        return f"{self.legend}({self.MA_type}{self.ma_period})"
-
+    ## --------------------------------
+    #  MA details
     def GetMAType(self):
         """
         returns string indicating what kind of MA this instance is
@@ -89,6 +84,18 @@ class MA:
         """
         return self.ma_period
 
+    def GetLegend(self):
+        """
+        returns legend string this instance was created with
+
+        this is a string that is used to uniquely identify a moving average
+        instance's name/purpose (note: MA type and period is appended in
+        GetLegend() to enhance clarity)        
+        """
+        return f"{self.legend}({self.MA_type}{self.ma_period})"
+
+    ## --------------------------------
+    #  Current values
     def GetMA(self):
         """
         returns current calculated MA as of last CalculateNextMA() call
@@ -96,23 +103,11 @@ class MA:
         """
         return self.ma
 
-    def GetMAHistory(self):
-        """
-        returns all MAs calculated since start as a list
-        """
-        return self.MA_history
-
     def GetMASlope(self):
         """
         return slope computed from last 2 values of calculated MA
         """
         return self.slope
-
-    def GetMASlopeHistory(self):
-        """
-        returns all MA slopes calculated since start as a list
-        """
-        return self.MA_slope_history
 
     def GetMASlopeDuration(self):
         """
@@ -120,6 +115,20 @@ class MA:
         the same sign of slope
         """
         return self.slope_duration
+
+    ## --------------------------------
+    #  Historical values
+    def GetMAHistory(self):
+        """
+        returns all MAs calculated since start as a list
+        """
+        return self.MA_history
+
+    def GetMASlopeHistory(self):
+        """
+        returns all MA slopes calculated since start as a list
+        """
+        return self.MA_slope_history
 
 ## ----------------------------------------------------------------------------
 
@@ -138,17 +147,23 @@ class SMA(MA):
     collecting enough values to return the proper period SMA).
     """
 
-    def __init__(self, legend, ma_period, keep_history=False, slope_delta_x=1):
+    def __init__(self, legend, ma_period, keep_history=False):
         """
         also see MA.__init__()
         """
-        super().__init__(legend, ma_period, keep_history, slope_delta_x)
+        super().__init__(legend, ma_period, keep_history)
         self.MA_type = 'SMA'
         self.sample_window = deque(maxlen = ma_period)
 
-    def CalculateNextMA(self, new_val):
+    def CalculateNextMA(self, new_val, slope_delta_x=1):
         """
         Compute Simple Moving Average iteratively
+
+        slope_delta_x specifies the change on the new_val's x-axis since the
+        last CalculateNextMA() call. The default is "1 unit", so slope can be
+        thought of as a "relative" slope, but can be specified exactly here to
+        correlate with the actual delta x so slope calculation yields the real
+        slope.
 
         Initialization is a bit non-traditional:  
         The SMA is initialized progressively using a sample window that grows
@@ -160,6 +175,7 @@ class SMA(MA):
         """
         # update for next __CalculateMASlope__()
         self.prev_ma = self.ma
+        self.slope_delta_x = slope_delta_x
 
         if len(self.sample_window) < self.ma_period:
             # -- progressively establish new sma --
@@ -213,16 +229,23 @@ class EMA(MA):
         """
         also see MA.__init__()
         """
-        super().__init__(legend, ma_period, keep_history, slope_delta_x)
+        super().__init__(legend, ma_period, keep_history)
         self.MA_type = 'EMA'
         self.alpha = 2/(ma_period + 1)
 
-    def CalculateNextMA(self, new_val):
+    def CalculateNextMA(self, new_val, slope_delta_x=1):
         """
         Compute Exponential iteratively
+
+        slope_delta_x specifies the change on the new_val's x-axis since the
+        last CalculateNextMA() call. The default is "1 unit", so slope can be
+        thought of as a "relative" slope, but can be specified exactly here to
+        correlate with the actual delta x so slope calculation yields the real
+        slope.
         """
         # update for next __CalculateMASlope__()
         self.prev_ma = self.ma
+        self.slope_delta_x = slope_delta_x
 
         if self.first_pass_init:
             # initialize with first value added to EMA

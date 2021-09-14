@@ -50,6 +50,11 @@ for x in range(-25,25):
 ### History
 If `keep_history` is  True at instantiation, all calculated MA values and their slopes are kept and can be retrieved as a list with GetMAHistory() and GetMASlopeHistory(). Defaults to False to save memory for long-running use where a complete history is not needed.
 
+### CalculateNextMA(self, new_val, slope_delta_x=1)
+There is an extra parameter `slope_delta_x` which can be used to specify the change on the new_val's x-axis since the last CalculateNextMA() call. This allows the MA's slope to be accurately calculated when the delta x varies between MA calculations (or 1 is not appropriate).
+
+The default is "1 unit", so slope can be thought of as a "relative" slope, but can be specified exactly here to correlate with the actual delta x so slope calculation yields the real slope.
+
 ### Requirements
 - Python 3.6+
 
